@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { cancelOrderAction, completeOrderAction, confirmOrderAction, finishProductionAction, startProductionAction } from '@/app/painel/actions';
+import { cancelOrderAction, confirmOrderAction, finishProductionAction, startProductionAction } from '@/app/painel/actions';
+import { completeOrderFulfillmentAction, markOutForDeliveryAction } from '@/app/painel/pedidos/fulfillment-actions';
 
-export function OrderActions({ id, status }: { id: string; status: string }) {
+export function OrderActions({ id, status, fulfillmentType = 'pickup' }: { id: string; status: string; fulfillmentType?: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState('');
@@ -30,7 +31,9 @@ export function OrderActions({ id, status }: { id: string; status: string }) {
       {status === 'draft' && <button disabled={pending} onClick={() => run(() => confirmOrderAction(id))} className="action-button bg-wine text-cream">Confirmar e reservar</button>}
       {status === 'confirmed' && <button disabled={pending} onClick={() => run(() => startProductionAction(id))} className="action-button bg-terracotta text-white">Começar produção</button>}
       {status === 'production' && <button disabled={pending} onClick={() => run(() => finishProductionAction(id))} className="action-button bg-success text-white">Marcar como pronto</button>}
-      {['ready','out_for_delivery'].includes(status) && <button disabled={pending} onClick={() => run(() => completeOrderAction(id))} className="action-button bg-wine text-cream">Concluir pedido</button>}
+      {status === 'ready' && fulfillmentType === 'delivery' && <button disabled={pending} onClick={() => run(() => markOutForDeliveryAction(id))} className="action-button bg-terracotta text-white">Saiu para entrega</button>}
+      {status === 'ready' && fulfillmentType !== 'delivery' && <button disabled={pending} onClick={() => run(() => completeOrderFulfillmentAction(id))} className="action-button bg-wine text-cream">Cliente retirou</button>}
+      {status === 'out_for_delivery' && <button disabled={pending} onClick={() => run(() => completeOrderFulfillmentAction(id))} className="action-button bg-wine text-cream">Entrega concluída</button>}
       {['draft','awaiting_deposit','confirmed'].includes(status) && <button disabled={pending} onClick={() => run(() => cancelOrderAction(id))} className="action-button border border-danger/20 bg-white text-danger">Cancelar</button>}
     </div>
   </div>;
