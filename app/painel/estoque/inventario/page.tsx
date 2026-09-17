@@ -10,7 +10,8 @@ export default async function InventarioPage(){
   const context=await getBusinessContext(); if(!context)return null;
   const canAdjust=hasPermission(context,'adjust_stock');
   const supabase=await createClient();
-  const {data=[]}=await supabase.from('inventory_stock_summary').select('inventory_item_id,name,base_unit,on_hand,reserved,available').eq('business_id',context.business.id).order('name');
+  const {data:stockRows}=await supabase.from('inventory_stock_summary').select('inventory_item_id,name,base_unit,on_hand,reserved,available').eq('business_id',context.business.id).order('name');
+  const data=stockRows??[];
   return <><PageHeader eyebrow="Conferência física" title="Inventário" description="Informe quanto existe de verdade. A Confeita registra apenas a diferença como ajuste, preservando todo o histórico."/>
     {!canAdjust?<div className="panel p-8 text-center text-sm text-graphite/50">Seu perfil pode consultar o estoque, mas não pode fazer ajustes de inventário.</div>:data.length===0?<div className="panel p-10 text-center"><PackageOpen className="mx-auto mb-3 text-wine/20"/><p className="m-0 font-bold text-wine">Cadastre ingredientes antes de fazer a conferência.</p><Link href="/painel/estoque" className="mt-4 inline-flex rounded-2xl bg-wine px-4 py-2.5 text-xs font-bold text-cream">Ir para estoque</Link></div>:<form action={applyInventoryCountAction} className="space-y-5">
       <div className="rounded-3xl bg-wine p-5 text-cream"><div className="flex items-start gap-3"><ClipboardCheck className="mt-0.5 shrink-0"/><div><p className="m-0 text-sm font-black">Como funciona</p><p className="mb-0 mt-1 text-xs leading-5 text-cream/60">O valor atual não é apagado. Se o sistema tem 5 kg e você contar 4,8 kg, será criado um ajuste de -0,2 kg com data, usuário e motivo.</p></div></div></div>
