@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { CalendarDays, Heart, MessageCircle, ShoppingBag, Star, WalletCards } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { StatusBadge } from '@/components/status-badge';
-import { getBusinessContext } from '@/lib/auth';
+import { getBusinessContext, hasPermission } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { money, shortDate, shortDateTime } from '@/lib/format';
 import { updateCustomerProfileAction } from './actions';
@@ -15,6 +15,7 @@ export default async function ClienteDetalhePage({ params, searchParams }: { par
   const query = await searchParams;
   const context = await getBusinessContext();
   if (!context) return null;
+  if (!hasPermission(context, 'view_customers')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode acessar clientes.'));
   const supabase = await createClient();
   const [customerResult, metricsResult, ordersResult] = await Promise.all([
     supabase.from('customers').select('id,name,whatsapp,email,birth_date,address,notes,tags,restrictions,preferences,created_at').eq('business_id', context.business.id).eq('id', id).maybeSingle(),
