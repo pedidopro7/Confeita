@@ -8,7 +8,8 @@ export default async function ClientesPage() {
   const context = await getBusinessContext();
   if (!context) return null;
   const supabase = await createClient();
-  const { data: customers = [] } = await supabase.from('customers').select('id,name,whatsapp,email,created_at').eq('business_id', context.business.id).order('name');
+  const { data: customersData } = await supabase.from('customers').select('id,name,whatsapp,email,created_at').eq('business_id', context.business.id).order('name');
+  const customers = customersData ?? [];
   return <>
     <PageHeader eyebrow="Relacionamento" title="Clientes" description="Histórico e dados dos clientes da sua confeitaria." />
     <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
