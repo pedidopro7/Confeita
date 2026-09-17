@@ -3,7 +3,7 @@ import { CalendarDays, MapPin, ReceiptText } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { QuoteActions } from '@/components/quote-actions';
 import { QuoteShareButton } from '@/components/quote-share-button';
-import { getBusinessContext } from '@/lib/auth';
+import { getBusinessContext, hasPermission } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { money, numberPt, shortDateTime } from '@/lib/format';
 
@@ -11,7 +11,7 @@ const labels:Record<string,string>={draft:'Rascunho',sent:'Enviado',waiting:'Agu
 
 export default async function OrcamentoDetalhePage({params}:{params:Promise<{id:string}>}){
   const {id}=await params;
-  const context=await getBusinessContext(); if(!context)return null;
+  const context=await getBusinessContext();if(!context)return null;if(!hasPermission(context,'manage_quotes'))redirect('/painel?erro='+encodeURIComponent('Seu perfil não pode acessar orçamentos.')); if(!context)return null;
   const supabase=await createClient();
   const [{data:quote},{data:items=[]}]=await Promise.all([
     supabase.from('quotes').select('id,status,desired_at,subtotal,discount,delivery_fee,total,deposit_required,fulfillment_type,notes,expires_at,created_at,customer:customers(name,whatsapp,email)').eq('business_id',context.business.id).eq('id',id).maybeSingle(),
