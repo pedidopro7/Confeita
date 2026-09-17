@@ -10,8 +10,8 @@ function text(value: FormDataEntryValue | null) {
 }
 
 function num(value: FormDataEntryValue | null) {
-  const value = Number(String(value ?? '').replace(',', '.'));
-  return Number.isFinite(value) ? value : 0;
+  const parsed = Number(String(value ?? '').replace(',', '.'));
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 export async function recordPurchaseNormalizedAction(formData: FormData) {
