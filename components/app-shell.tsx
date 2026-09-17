@@ -48,6 +48,20 @@ export function AppShell({ children, businessName, userName, role, permissions }
     return item.roles.includes(role) || Boolean(item.permission && permissions[item.permission]);
   });
   const plusHref = role === 'stock' ? '/painel/compras' : role === 'finance' ? '/painel/financeiro' : role === 'production' ? '/painel/producao' : '/painel/pedidos/novo';
+  const mobileSecond = role === 'stock'
+    ? { href: '/painel/estoque', label: 'Estoque', icon: PackageOpen }
+    : role === 'finance'
+      ? { href: '/painel/financeiro', label: 'Financeiro', icon: DollarSign }
+      : role === 'production'
+        ? { href: '/painel/producao', label: 'Produção', icon: Cookie }
+        : { href: '/painel/pedidos', label: 'Pedidos', icon: ClipboardList };
+  const mobileFourth = role === 'stock'
+    ? { href: '/painel/compras', label: 'Compras', icon: ShoppingBasket }
+    : role === 'finance'
+      ? { href: '/painel/relatorios', label: 'Relatórios', icon: BarChart3 }
+      : role === 'service' || role === 'production'
+        ? { href: '/painel/agenda', label: 'Agenda', icon: CalendarDays }
+        : { href: '/painel/producao', label: 'Produção', icon: Cookie };
 
   return (
     <div className="min-h-screen bg-cream md:grid md:grid-cols-[248px_1fr]">
@@ -85,9 +99,9 @@ export function AppShell({ children, businessName, userName, role, permissions }
 
       <nav className="fixed bottom-3 left-1/2 z-30 flex w-[calc(100%-24px)] max-w-md -translate-x-1/2 items-center justify-around rounded-3xl border border-wine/10 bg-white/95 px-2 py-2 shadow-soft backdrop-blur md:hidden">
         <MobileLink href="/painel" label="Início" icon={Sparkles} active={pathname === '/painel'} />
-        <MobileLink href="/painel/pedidos" label="Pedidos" icon={ClipboardList} active={pathname.startsWith('/painel/pedidos')} />
+        <MobileLink href={mobileSecond.href} label={mobileSecond.label} icon={mobileSecond.icon} active={pathname === mobileSecond.href || pathname.startsWith(mobileSecond.href + '/')} />
         <Link href={plusHref} className="-mt-7 flex h-14 w-14 items-center justify-center rounded-2xl bg-wine text-cream shadow-soft" aria-label="Ação principal"><Plus /></Link>
-        <MobileLink href="/painel/producao" label="Produção" icon={Cookie} active={pathname.startsWith('/painel/producao')} />
+        <MobileLink href={mobileFourth.href} label={mobileFourth.label} icon={mobileFourth.icon} active={pathname === mobileFourth.href || pathname.startsWith(mobileFourth.href + '/')} />
         <button onClick={() => setMenuOpen(true)} className="flex min-w-12 flex-col items-center gap-1 text-[9px] font-bold text-graphite/45"><Menu size={18} />Mais</button>
       </nav>
 
