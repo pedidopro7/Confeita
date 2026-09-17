@@ -130,7 +130,9 @@ export async function createProductOptionAction(formData: FormData) {
     group_id: groupId,
     name,
     price_delta: num(formData.get('price_delta')),
-    recipe_id: text(formData.get('recipe_id')) || null
+    recipe_id: text(formData.get('recipe_id')) || null,
+    recipe_output_qty: Math.max(num(formData.get('recipe_output_qty'), 1), 0.0001),
+    recipe_output_unit: text(formData.get('recipe_output_unit')) || 'un'
   });
 
   if (error) redirect(productPath(productId, 'erro=' + encodeURIComponent(error.message)));
