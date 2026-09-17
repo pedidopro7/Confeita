@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { CalendarDays, MapPin, ReceiptText } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { QuoteActions } from '@/components/quote-actions';
