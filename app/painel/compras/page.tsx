@@ -6,8 +6,13 @@ import { createClient } from '@/lib/supabase/server';
 import { createSupplierAction } from '../actions';
 import { money, shortDateTime } from '@/lib/format';
 
-export default async function ComprasPage() {
+export default async function ComprasPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const context = await getBusinessContext(); if (!context) return null; if (!hasPermission(context, 'manage_purchases')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode acessar compras.')); if (!context) return null;
+  const params = await searchParams;
+  const initialItemId = typeof params.item === 'string' ? params.item : '';
+  const initialQuantity = typeof params.qtd === 'string' ? Number(params.qtd) : 1;
+  const initialUnit = typeof params.unidade === 'string' ? params.unidade : '';
+  const initialSupplierId = typeof params.fornecedor === 'string' ? params.fornecedor : '';
   const supabase = await createClient();
   const [suppliersResult, itemsResult, purchasesResult] = await Promise.all([
     supabase.from('suppliers').select('id,name,whatsapp').eq('business_id', context.business.id).order('name'),
@@ -20,7 +25,7 @@ export default async function ComprasPage() {
 
   return <>
     <PageHeader eyebrow="Abastecimento" title="Compras" description="Registre uma compra inteira de uma vez. Estoque, custo médio e financeiro são atualizados juntos." actionHref="/painel/compras/lista" actionLabel="Lista automática" />
-    <PurchaseBuilder items={items} suppliers={suppliers.map((supplier) => ({ id: supplier.id, name: supplier.name }))}/>
+    <PurchaseBuilder items={items} suppliers={suppliers.map((supplier) => ({ id: supplier.id, name: supplier.name }))} initialItemId={initialItemId} initialQuantity={initialQuantity} initialUnit={initialUnit} initialSupplierId={initialSupplierId}/>
 
     <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_360px]">
       <section className="panel overflow-hidden">
