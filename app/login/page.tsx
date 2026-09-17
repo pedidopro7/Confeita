@@ -61,6 +61,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <p className="eyebrow mb-2">Acessar minha conta</p>
           <h2 className="m-0 text-3xl font-black tracking-[-0.04em] text-wine">Bem-vinda de volta</h2>
           <p className="mt-2 text-sm text-graphite/55">Entre para continuar cuidando da sua produção.</p>
+          <div className="mt-4 rounded-2xl border border-terracotta/25 bg-terracotta/10 px-4 py-3 text-xs font-bold text-wine">
+            Acesso de teste RC1 — usuário <strong>admin</strong> · senha <strong>admin</strong>
+          </div>
 
           {error && <div className="mt-5 rounded-2xl bg-danger/10 px-4 py-3 text-sm font-semibold text-danger">{error}</div>}
           {created && <div className="mt-5 rounded-2xl bg-success/10 px-4 py-3 text-sm font-semibold text-success">Conta criada. Confirme seu e-mail se o Supabase solicitar e depois entre.</div>}
@@ -71,7 +74,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
               <span className="mb-2 block text-xs font-bold text-graphite/65">E-mail ou usuário</span>
               <div className="flex items-center gap-3 rounded-2xl border border-wine/10 bg-cream/45 px-4">
                 <UserRound size={17} className="text-wine/45" />
-                <input required name="identifier" type="text" autoComplete="username" placeholder="Seu e-mail ou usuário" className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-graphite/30" />
+                <input required name="identifier" type="text" autoComplete="username" placeholder="admin ou seu e-mail" className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-graphite/30" />
               </div>
             </label>
             <label className="block">
