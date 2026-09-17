@@ -82,7 +82,8 @@ create index if not exists idx_subscriptions_business_id on public.subscriptions
 create index if not exists idx_subscriptions_plan_code on public.subscriptions(plan_code);
 
 create index if not exists idx_expenses_business_occurred on public.expenses(business_id, occurred_at desc);
-create index if not exists idx_financial_transactions_business_occurred on public.financial_transactions(business_id, occurred_at desc);
+create index if not exists idx_financial_transactions_business_due on public.financial_transactions(business_id, due_at desc);
+create index if not exists idx_financial_transactions_business_paid on public.financial_transactions(business_id, paid_at desc) where paid_at is not null;
 
 -- Remove duplicate indexes already reported by the Supabase advisor.
 drop index if exists public.idx_inventory_movements_item;
