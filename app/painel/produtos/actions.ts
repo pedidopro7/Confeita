@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { getBusinessContext } from '@/lib/auth';
+import { getBusinessContext, hasPermission } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 
 function text(value: FormDataEntryValue | null) {
@@ -17,6 +17,7 @@ function num(value: FormDataEntryValue | null, fallback = 0) {
 async function context() {
   const ctx = await getBusinessContext();
   if (!ctx) throw new Error('Confeitaria não encontrada.');
+  if (!hasPermission(ctx, 'manage_products')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode alterar produtos.'));
   return ctx;
 }
 
