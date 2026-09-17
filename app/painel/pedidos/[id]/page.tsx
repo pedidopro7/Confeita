@@ -28,7 +28,7 @@ export default async function PedidoDetalhePage({ params }: { params: Promise<{ 
   const supabase = await createClient();
   const [orderResult, itemsResult, reservationsResult] = await Promise.all([
     supabase.from('orders').select('id,order_number,status,scheduled_at,total,subtotal,delivery_fee,deposit_required,fulfillment_type,notes,customer:customers(name,whatsapp)').eq('business_id', context.business.id).eq('id', id).maybeSingle(),
-    supabase.from('order_items').select('id,name_snapshot,quantity,unit_price,total_price,recipe_version_id,recipe_output_qty,recipe_output_unit,configuration').eq('business_id', context.business.id).eq('order_id', id),
+    supabase.from('order_items').select('id,name_snapshot,quantity,unit_price,total_price,recipe_version_id,recipe_output_qty,recipe_output_unit,configuration,cost_snapshot').eq('business_id', context.business.id).eq('order_id', id),
     supabase.from('inventory_reservations').select('id,quantity,unit,status,item:inventory_items(name)').eq('business_id', context.business.id).eq('order_id', id).eq('status', 'active')
   ]);
   const order = orderResult.data;
@@ -37,6 +37,11 @@ export default async function PedidoDetalhePage({ params }: { params: Promise<{ 
   if (!order) notFound();
   const customer: any = Array.isArray(order.customer) ? order.customer[0] : order.customer;
   const canSeeReservedIngredients = ['owner', 'manager', 'stock'].includes(context.role);
+  const canSeeCosts = context.role === 'owner';
+  const hasCostSnapshot = items.some((item) => item.cost_snapshot !== null);
+  const materialCostSnapshot = items.reduce((sum, item) => sum + Number(item.cost_snapshot ?? 0), 0);
+  const materialGrossProfit = Number(order.subtotal) - materialCostSnapshot;
+  const materialMargin = Number(order.subtotal) > 0 ? (materialGrossProfit / Number(order.subtotal)) * 100 : 0;
 
   return <>
     <PageHeader eyebrow={`Pedido #${order.order_number}`} title={customer?.name || 'Encomenda'} description={`${shortDateTime(order.scheduled_at)} · ${order.fulfillment_type === 'delivery' ? 'Entrega' : 'Retirada'}`} />
@@ -59,6 +64,7 @@ export default async function PedidoDetalhePage({ params }: { params: Promise<{ 
 
       <aside className="space-y-5">
         <section className="panel p-5"><p className="eyebrow mb-3">Resumo</p><div className="space-y-2 text-sm"><div className="flex justify-between"><span className="text-graphite/50">Produtos</span><strong>{money(order.subtotal)}</strong></div><div className="flex justify-between"><span className="text-graphite/50">Entrega</span><strong>{money(order.delivery_fee)}</strong></div><div className="flex justify-between"><span className="text-graphite/50">Sinal solicitado</span><strong>{money(order.deposit_required)}</strong></div></div><div className="mt-4 border-t border-wine/10 pt-4"><p className="m-0 text-xs text-graphite/40">Total</p><p className="m-0 mt-1 text-3xl font-black text-wine">{money(order.total)}</p></div></section>
+        {canSeeCosts && <section className="panel p-5"><div className="flex items-center gap-2"><LockKeyhole size={13} className="text-wine"/><p className="eyebrow m-0">Custos do pedido</p></div>{hasCostSnapshot ? <><div className="mt-4 space-y-2 text-sm"><div className="flex justify-between"><span className="text-graphite/50">Insumos congelados</span><strong>{money(materialCostSnapshot)}</strong></div><div className="flex justify-between"><span className="text-graphite/50">Lucro bruto de insumos</span><strong>{money(materialGrossProfit)}</strong></div><div className="flex justify-between"><span className="text-graphite/50">Margem de insumos</span><strong>{numberPt(materialMargin, 1)}%</strong></div></div><p className="mb-0 mt-3 text-[10px] leading-4 text-graphite/40">Snapshot salvo quando a encomenda foi confirmada. Mudanças futuras no custo dos ingredientes não alteram este histórico.</p></> : <p className="mb-0 mt-3 text-xs leading-5 text-graphite/50">O custo será congelado quando a encomenda for confirmada.</p>}</section>}
         <section className="panel p-5"><p className="eyebrow mb-3">Operação</p><OrderActions id={order.id} status={order.status} /></section>
         {order.notes && <section className="panel p-5"><p className="eyebrow mb-2">Observações</p><p className="m-0 whitespace-pre-wrap text-sm leading-6 text-graphite/60">{order.notes}</p></section>}
       </aside>

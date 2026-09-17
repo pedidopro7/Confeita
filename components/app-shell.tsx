@@ -4,8 +4,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  CalendarDays, ClipboardList, Cookie, DollarSign, LockKeyhole, Menu, PackageOpen,
-  Settings, ShoppingBasket, Sparkles, UsersRound, BarChart3, LogOut, Plus, X, ChevronDown
+  BarChart3, Calculator, CalendarDays, ChevronDown, ClipboardList, Cookie, DollarSign,
+  LockKeyhole, LogOut, Menu, PackageOpen, Plus, Settings, ShoppingBasket, Sparkles,
+  UsersRound, X
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -19,6 +20,7 @@ const nav = [
   { href: '/painel/estoque', label: 'Estoque', icon: PackageOpen },
   { href: '/painel/compras', label: 'Compras', icon: ShoppingBasket },
   { href: '/painel/clientes', label: 'Clientes', icon: UsersRound },
+  { href: '/painel/precificacao', label: 'Precificação', icon: Calculator, ownerOnly: true },
   { href: '/painel/financeiro', label: 'Financeiro', icon: DollarSign },
   { href: '/painel/relatorios', label: 'Relatórios', icon: BarChart3 },
   { href: '/painel/equipe', label: 'Equipe', icon: UsersRound },
@@ -28,6 +30,7 @@ const nav = [
 export function AppShell({ children, businessName, userName, role }: { children: React.ReactNode; businessName: string; userName: string; role: string }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const visibleNav = nav.filter((item) => !item.ownerOnly || role === 'owner');
 
   return (
     <div className="min-h-screen bg-cream md:grid md:grid-cols-[248px_1fr]">
@@ -38,7 +41,7 @@ export function AppShell({ children, businessName, userName, role }: { children:
         </Link>
         <nav className="min-h-0 flex-1 overflow-y-auto pr-1">
           <div className="space-y-1">
-            {nav.map((item) => <NavLink key={item.href} {...item} active={pathname === item.href || (item.href !== '/painel' && pathname.startsWith(item.href + '/'))} />)}
+            {visibleNav.map((item) => <NavLink key={item.href} {...item} active={pathname === item.href || (item.href !== '/painel' && pathname.startsWith(item.href + '/'))} />)}
           </div>
         </nav>
         <div className="mt-4 rounded-2xl border border-wine/10 bg-cream/65 p-3">
@@ -72,7 +75,7 @@ export function AppShell({ children, businessName, userName, role }: { children:
         <div className="fixed inset-0 z-50 bg-black/25 backdrop-blur-sm md:hidden" onClick={() => setMenuOpen(false)}>
           <div className="absolute right-0 top-0 h-full w-[86%] max-w-sm overflow-y-auto bg-cream p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-6 flex items-center justify-between"><div><p className="m-0 font-black text-wine">{businessName}</p><p className="m-0 text-[10px] uppercase tracking-[.15em] text-graphite/40">{role}</p></div><button onClick={() => setMenuOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-wine"><X size={18} /></button></div>
-            <div className="space-y-1">{nav.map((item) => <div key={item.href} onClick={() => setMenuOpen(false)}><NavLink {...item} active={pathname === item.href || (item.href !== '/painel' && pathname.startsWith(item.href + '/'))} /></div>)}</div>
+            <div className="space-y-1">{visibleNav.map((item) => <div key={item.href} onClick={() => setMenuOpen(false)}><NavLink {...item} active={pathname === item.href || (item.href !== '/painel' && pathname.startsWith(item.href + '/'))} /></div>)}</div>
             <form className="mt-6" action="/auth/logout" method="post"><button className="flex w-full items-center justify-center gap-2 rounded-2xl border border-wine/10 bg-white px-4 py-3 text-sm font-bold text-wine"><LogOut size={16} /> Sair da conta</button></form>
           </div>
         </div>
@@ -81,7 +84,7 @@ export function AppShell({ children, businessName, userName, role }: { children:
   );
 }
 
-function NavLink({ href, label, icon: Icon, active, secure }: { href: string; label: string; icon: React.ComponentType<{ size?: number; className?: string }>; active: boolean; secure?: boolean }) {
+function NavLink({ href, label, icon: Icon, active, secure }: { href: string; label: string; icon: React.ComponentType<{ size?: number; className?: string }>; active: boolean; secure?: boolean; ownerOnly?: boolean }) {
   return <Link href={href} className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-xs font-bold transition ${active ? 'bg-wine text-cream' : 'text-graphite/60 hover:bg-wine/5 hover:text-wine'}`}><Icon size={17} /><span className="flex-1">{label}</span>{secure && <span className={`text-[8px] uppercase tracking-[.12em] ${active ? 'text-cream/55' : 'text-wine/35'}`}>privado</span>}</Link>;
 }
 
