@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { getBusinessContext } from '@/lib/auth';
+import { getBusinessContext, hasPermission } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 
 function text(value: FormDataEntryValue | null) {
@@ -17,6 +17,7 @@ function num(value: FormDataEntryValue | null) {
 export async function recordLossNormalizedAction(formData: FormData) {
   const context = await getBusinessContext();
   if (!context) redirect('/login');
+  if (!hasPermission(context, 'adjust_stock')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode ajustar estoque.'));
   const itemId = text(formData.get('inventory_item_id'));
   const quantity = num(formData.get('quantity'));
   const unit = text(formData.get('unit'));

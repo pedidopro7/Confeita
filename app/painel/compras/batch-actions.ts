@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getBusinessContext } from '@/lib/auth';
+import { getBusinessContext, hasPermission } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 
 export type PurchaseBatchItemInput = {
@@ -33,7 +33,7 @@ function friendly(message: string) {
 export async function recordPurchaseBatchAction(input: PurchaseBatchInput) {
   const context = await getBusinessContext();
   if (!context) return { ok: false, error: 'Sessão expirada.' } as const;
-  if (!['owner', 'manager', 'stock'].includes(context.role)) return { ok: false, error: 'Seu perfil não pode registrar compras.' } as const;
+  if (!hasPermission(context, 'manage_purchases')) return { ok: false, error: 'Seu perfil não pode registrar compras.' } as const;
   if (!input.items?.length) return { ok: false, error: 'Adicione pelo menos um item.' } as const;
   if (input.items.some((item) => !item.inventoryItemId || item.quantity <= 0 || item.totalCost < 0 || !item.unit.trim())) {
     return { ok: false, error: 'Revise os itens da compra.' } as const;

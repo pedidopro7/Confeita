@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createHash, randomBytes } from 'node:crypto';
-import { getBusinessContext, requireOwner } from '@/lib/auth';
+import { getBusinessContext, hasPermission, requireOwner } from '@/lib/auth';
 
 function str(value: FormDataEntryValue | null) {
   return String(value ?? '').trim();
@@ -22,6 +22,7 @@ async function ctx() {
 
 export async function createCustomerAction(formData: FormData) {
   const context = await ctx();
+  if (!hasPermission(context, 'view_customers')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode cadastrar clientes.'));
   const { error } = await (await import('@/lib/supabase/server')).createClient().then((client) =>
     client.from('customers').insert({
       business_id: context.business.id,
@@ -39,6 +40,7 @@ export async function createCustomerAction(formData: FormData) {
 
 export async function createProductAction(formData: FormData) {
   const context = await ctx();
+  if (!hasPermission(context, 'manage_products')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode cadastrar produtos.'));
   const supabase = await (await import('@/lib/supabase/server')).createClient();
   const { error } = await supabase.from('products').insert({
     business_id: context.business.id,
@@ -54,6 +56,7 @@ export async function createProductAction(formData: FormData) {
 
 export async function createInventoryItemAction(formData: FormData) {
   const context = await ctx();
+  if (!hasPermission(context, 'adjust_stock')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode ajustar estoque.'));
   const supabase = await (await import('@/lib/supabase/server')).createClient();
   const baseUnit = str(formData.get('base_unit')) || 'un';
   const openingQty = number(formData.get('opening_qty'));
@@ -96,6 +99,7 @@ export async function createInventoryItemAction(formData: FormData) {
 
 export async function recordLossAction(formData: FormData) {
   const context = await ctx();
+  if (!hasPermission(context, 'adjust_stock')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode registrar perdas.'));
   const supabase = await (await import('@/lib/supabase/server')).createClient();
   const itemId = str(formData.get('inventory_item_id'));
   const qty = Math.abs(number(formData.get('quantity')));
@@ -136,6 +140,7 @@ export type OrderInput = {
 
 export async function createOrderAction(input: OrderInput) {
   const context = await ctx();
+  if (!hasPermission(context, 'manage_orders')) return { ok: false, error: 'Seu perfil não pode criar encomendas.' };
   const supabase = await (await import('@/lib/supabase/server')).createClient();
   if (!input.items?.length) return { ok: false, error: 'Adicione pelo menos um produto.' };
 
@@ -184,6 +189,7 @@ export async function createOrderAction(input: OrderInput) {
 
 export async function confirmOrderAction(orderId: string) {
   const context = await ctx();
+  if (!hasPermission(context, 'manage_orders')) return { ok: false, error: 'Seu perfil não pode confirmar encomendas.' };
   const supabase = await (await import('@/lib/supabase/server')).createClient();
   const { data, error } = await supabase.rpc('reserve_order_inventory', { p_order_id: orderId });
   if (error) return { ok: false, error: error.message };
@@ -194,7 +200,8 @@ export async function confirmOrderAction(orderId: string) {
 }
 
 export async function startProductionAction(orderId: string) {
-  await ctx();
+  const context = await ctx();
+  if (!hasPermission(context, 'manage_production')) return { ok: false, error: 'Seu perfil não pode iniciar a produção.' };
   const supabase = await (await import('@/lib/supabase/server')).createClient();
   const { data, error } = await supabase.rpc('start_order_production', { p_order_id: orderId });
   if (error) return { ok: false, error: error.message };
@@ -206,7 +213,8 @@ export async function startProductionAction(orderId: string) {
 }
 
 export async function finishProductionAction(orderId: string) {
-  await ctx();
+  const context = await ctx();
+  if (!hasPermission(context, 'manage_production')) return { ok: false, error: 'Seu perfil não pode concluir a produção.' };
   const supabase = await (await import('@/lib/supabase/server')).createClient();
   const { data, error } = await supabase.rpc('finish_order_production', { p_order_id: orderId });
   if (error) return { ok: false, error: error.message };
@@ -217,7 +225,8 @@ export async function finishProductionAction(orderId: string) {
 }
 
 export async function cancelOrderAction(orderId: string) {
-  await ctx();
+  const context = await ctx();
+  if (!hasPermission(context, 'cancel_orders')) return { ok: false, error: 'Seu perfil não pode cancelar pedidos.' };
   const supabase = await (await import('@/lib/supabase/server')).createClient();
   const { error } = await supabase.rpc('cancel_order_and_release', { p_order_id: orderId });
   if (error) return { ok: false, error: error.message };
@@ -228,6 +237,7 @@ export async function cancelOrderAction(orderId: string) {
 
 export async function completeOrderAction(orderId: string) {
   const context = await ctx();
+  if (!hasPermission(context, 'manage_orders')) return { ok: false, error: 'Seu perfil não pode concluir pedidos.' };
   const supabase = await (await import('@/lib/supabase/server')).createClient();
   const { data: order } = await supabase.from('orders').select('status').eq('id', orderId).single();
   if (!order || !['ready', 'out_for_delivery'].includes(order.status)) return { ok: false, error: 'Pedido ainda não está pronto.' };
@@ -309,6 +319,7 @@ export async function createRecipeAction(input: RecipeInput) {
 
 export async function createSupplierAction(formData: FormData) {
   const context = await ctx();
+  if (!hasPermission(context, 'manage_purchases')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode cadastrar fornecedores.'));
   const supabase = await (await import('@/lib/supabase/server')).createClient();
   const { error } = await supabase.from('suppliers').insert({
     business_id: context.business.id,
@@ -324,6 +335,7 @@ export async function createSupplierAction(formData: FormData) {
 
 export async function recordPurchaseAction(formData: FormData) {
   const context = await ctx();
+  if (!hasPermission(context, 'manage_purchases')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode registrar compras.'));
   const supabase = await (await import('@/lib/supabase/server')).createClient();
   const itemId = str(formData.get('inventory_item_id'));
   const qty = number(formData.get('quantity'));
@@ -381,6 +393,7 @@ export async function recordPurchaseAction(formData: FormData) {
 
 export async function createExpenseAction(formData: FormData) {
   const context = await ctx();
+  if (!hasPermission(context, 'manage_finance')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode registrar despesas.'));
   const supabase = await (await import('@/lib/supabase/server')).createClient();
   const amount = number(formData.get('amount'));
   const occurredAt = str(formData.get('occurred_at')) || new Date().toISOString().slice(0, 10);

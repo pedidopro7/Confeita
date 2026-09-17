@@ -3,7 +3,7 @@ import { CheckCircle2, Clock3, CreditCard, LockKeyhole, RotateCcw } from 'lucide
 import { PageHeader } from '@/components/page-header';
 import { StatusBadge } from '@/components/status-badge';
 import { OrderActions } from '@/components/order-actions';
-import { getBusinessContext } from '@/lib/auth';
+import { getBusinessContext, hasPermission } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { money, numberPt, shortDateTime } from '@/lib/format';
 import { recordOrderPaymentAction, refundOrderPaymentAction } from './payment-actions';
@@ -59,10 +59,13 @@ export default async function PedidoDetalhePage({ params, searchParams }: { para
   const history = historyResult.data ?? [];
   if (!order) notFound();
   const customer: any = Array.isArray(order.customer) ? order.customer[0] : order.customer;
-  const canSeeReservedIngredients = ['owner', 'manager', 'stock'].includes(context.role);
-  const canSeeCosts = context.role === 'owner';
-  const canRecordPayment = ['owner', 'manager', 'finance', 'service'].includes(context.role);
-  const canRefund = ['owner', 'manager', 'finance'].includes(context.role);
+  const canManageOrders = hasPermission(context, 'manage_orders');
+  const canManageProduction = hasPermission(context, 'manage_production');
+  const canCancel = hasPermission(context, 'cancel_orders');
+  const canSeeReservedIngredients = hasPermission(context, 'adjust_stock') || canManageProduction;
+  const canSeeCosts = hasPermission(context, 'view_costs');
+  const canRecordPayment = hasPermission(context, 'manage_finance') || canManageOrders;
+  const canRefund = hasPermission(context, 'manage_finance');
   const hasCostSnapshot = items.some((item) => item.cost_snapshot !== null);
   const materialCostSnapshot = items.reduce((sum, item) => sum + Number(item.cost_snapshot ?? 0), 0);
   const materialGrossProfit = Number(order.subtotal) - materialCostSnapshot;
@@ -124,7 +127,7 @@ export default async function PedidoDetalhePage({ params, searchParams }: { para
         </section>
 
         {canSeeCosts && <section className="panel p-5"><div className="flex items-center gap-2"><LockKeyhole size={13} className="text-wine"/><p className="eyebrow m-0">Custos do pedido</p></div>{hasCostSnapshot ? <><div className="mt-4 space-y-2 text-sm"><div className="flex justify-between"><span className="text-graphite/50">Insumos congelados</span><strong>{money(materialCostSnapshot)}</strong></div><div className="flex justify-between"><span className="text-graphite/50">Lucro bruto de insumos</span><strong>{money(materialGrossProfit)}</strong></div><div className="flex justify-between"><span className="text-graphite/50">Margem de insumos</span><strong>{numberPt(materialMargin, 1)}%</strong></div></div><p className="mb-0 mt-3 text-[10px] leading-4 text-graphite/40">Snapshot salvo quando a encomenda foi confirmada. Mudanças futuras no custo dos ingredientes não alteram este histórico.</p></> : <p className="mb-0 mt-3 text-xs leading-5 text-graphite/50">O custo será congelado quando a encomenda for confirmada.</p>}</section>}
-        <section className="panel p-5"><p className="eyebrow mb-3">Operação</p><OrderActions id={order.id} status={order.status} fulfillmentType={order.fulfillment_type} /></section>
+        <section className="panel p-5"><p className="eyebrow mb-3">Operação</p><OrderActions id={order.id} status={order.status} fulfillmentType={order.fulfillment_type} canManageOrders={canManageOrders} canManageProduction={canManageProduction} canCancel={canCancel} /></section>
         {order.notes && <section className="panel p-5"><p className="eyebrow mb-2">Observações</p><p className="m-0 whitespace-pre-wrap text-sm leading-6 text-graphite/60">{order.notes}</p></section>}
       </aside>
     </div>

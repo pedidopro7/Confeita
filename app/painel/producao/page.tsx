@@ -10,6 +10,9 @@ import { numberPt, shortDateTime } from '@/lib/format';
 
 export default async function ProducaoPage() {
   const context = await getBusinessContext(); if (!context) return null; if (!hasPermission(context, 'manage_production')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode acessar produção.')); if (!context) return null;
+  const canManageOrders = hasPermission(context, 'manage_orders');
+  const canManageProduction = hasPermission(context, 'manage_production');
+  const canCancel = hasPermission(context, 'cancel_orders');
   const supabase = await createClient();
   const [ordersResult, productionResult] = await Promise.all([
     supabase.from('orders').select('id,order_number,status,scheduled_at,fulfillment_type,customer:customers(name),items:order_items(name_snapshot,quantity)').eq('business_id', context.business.id).in('status', ['confirmed', 'production', 'ready']).order('scheduled_at'),
@@ -53,16 +56,16 @@ export default async function ProducaoPage() {
       </section>
 
       <aside className="space-y-5">
-        <OrderLane title="A fazer" description="Pedidos confirmados e com ingredientes reservados" orders={confirmedOrders} />
-        <OrderLane title="Prontos" description="Conferidos e aguardando retirada/entrega" orders={readyOrders} ready />
+        <OrderLane title="A fazer" description="Pedidos confirmados e com ingredientes reservados" orders={confirmedOrders} canManageOrders={canManageOrders} canManageProduction={canManageProduction} canCancel={canCancel} />
+        <OrderLane title="Prontos" description="Conferidos e aguardando retirada/entrega" orders={readyOrders} ready canManageOrders={canManageOrders} canManageProduction={canManageProduction} canCancel={canCancel} />
       </aside>
     </div>
   </>;
 }
 
-function OrderLane({ title, description, orders, ready = false }: { title: string; description: string; orders: any[]; ready?: boolean }) {
+function OrderLane({ title, description, orders, ready = false, canManageOrders, canManageProduction, canCancel }: { title: string; description: string; orders: any[]; ready?: boolean; canManageOrders: boolean; canManageProduction: boolean; canCancel: boolean }) {
   return <section className="rounded-3xl bg-wine/[.035] p-3"><div className="mb-3 flex items-start justify-between gap-3 px-2"><div><h2 className="m-0 text-sm font-black text-wine">{title}</h2><p className="mb-0 mt-1 text-[9px] leading-4 text-graphite/35">{description}</p></div><span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-wine">{orders.length}</span></div><div className="space-y-3">{orders.length === 0 ? <div className="rounded-2xl border border-dashed border-wine/10 p-7 text-center text-xs text-graphite/35">Nada aqui.</div> : orders.map((order: any) => {
     const customer = Array.isArray(order.customer) ? order.customer[0] : order.customer;
-    return <article key={order.id} className="panel p-4"><Link href={`/painel/pedidos/${order.id}`}><div className="flex items-start gap-2">{ready && <PackageCheck size={15} className="mt-0.5 text-success"/>}<div><p className="m-0 text-xs font-black text-wine">#{order.order_number} · {customer?.name || 'Sem cliente'}</p><p className="m-0 mt-1 text-[10px] text-graphite/40">{shortDateTime(order.scheduled_at)}</p></div></div><div className="mt-3 space-y-1">{(order.items ?? []).slice(0, 4).map((item: any, index: number) => <p key={index} className="m-0 text-xs text-graphite/65">{numberPt(item.quantity)}× {item.name_snapshot}</p>)}</div></Link><div className="mt-4"><OrderActions id={order.id} status={order.status} fulfillmentType={order.fulfillment_type} /></div></article>;
+    return <article key={order.id} className="panel p-4"><Link href={`/painel/pedidos/${order.id}`}><div className="flex items-start gap-2">{ready && <PackageCheck size={15} className="mt-0.5 text-success"/>}<div><p className="m-0 text-xs font-black text-wine">#{order.order_number} · {customer?.name || 'Sem cliente'}</p><p className="m-0 mt-1 text-[10px] text-graphite/40">{shortDateTime(order.scheduled_at)}</p></div></div><div className="mt-3 space-y-1">{(order.items ?? []).slice(0, 4).map((item: any, index: number) => <p key={index} className="m-0 text-xs text-graphite/65">{numberPt(item.quantity)}× {item.name_snapshot}</p>)}</div></Link><div className="mt-4"><OrderActions id={order.id} status={order.status} fulfillmentType={order.fulfillment_type} canManageOrders={canManageOrders} canManageProduction={canManageProduction} canCancel={canCancel} /></div></article>;
   })}</div></section>;
 }
