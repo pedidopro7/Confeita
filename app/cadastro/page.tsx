@@ -9,9 +9,12 @@ async function signUp(formData: FormData) {
   const fullName = String(formData.get('full_name') ?? '').trim();
   const email = String(formData.get('email') ?? '').trim().toLowerCase();
   const password = String(formData.get('password') ?? '');
+  const rawNext = String(formData.get('next') ?? '/onboarding');
+  const next = rawNext.startsWith('/') ? rawNext : '/onboarding';
+  const nextParam = encodeURIComponent(next);
 
-  if (fullName.length < 2) redirect('/cadastro?erro=' + encodeURIComponent('Informe seu nome.'));
-  if (password.length < 8) redirect('/cadastro?erro=' + encodeURIComponent('A senha precisa ter pelo menos 8 caracteres.'));
+  if (fullName.length < 2) redirect(`/cadastro?erro=${encodeURIComponent('Informe seu nome.')}&next=${nextParam}`);
+  if (password.length < 8) redirect(`/cadastro?erro=${encodeURIComponent('A senha precisa ter pelo menos 8 caracteres.')}&next=${nextParam}`);
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -20,14 +23,16 @@ async function signUp(formData: FormData) {
     options: { data: { full_name: fullName } }
   });
 
-  if (error) redirect('/cadastro?erro=' + encodeURIComponent(error.message));
-  if (data.session) redirect('/onboarding');
-  redirect('/login?cadastro=ok');
+  if (error) redirect(`/cadastro?erro=${encodeURIComponent(error.message)}&next=${nextParam}`);
+  if (data.session) redirect(next);
+  redirect(`/login?cadastro=ok&next=${nextParam}`);
 }
 
 export default async function CadastroPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
   const error = typeof params.erro === 'string' ? params.erro : null;
+  const next = typeof params.next === 'string' && params.next.startsWith('/') ? params.next : '/onboarding';
+  const invitation = next.startsWith('/convite/');
 
   return (
     <main className="min-h-screen bg-cream px-4 py-8 md:grid md:place-items-center">
@@ -38,9 +43,9 @@ export default async function CadastroPage({ searchParams }: { searchParams: Pro
             <p className="m-0 text-2xl font-black tracking-[-0.04em]">confeita<span className="text-terracotta">.</span></p>
           </div>
           <div>
-            <div className="mb-5 inline-flex rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-cream/80">14 dias para testar o fluxo completo</div>
+            <div className="mb-5 inline-flex rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-cream/80">{invitation ? 'Você está entrando como parte de uma equipe' : '14 dias para testar o fluxo completo'}</div>
             <h1 className="max-w-md text-4xl font-black leading-tight tracking-[-0.04em]">Do pedido ao lucro, sem perder ingrediente, prazo ou receita.</h1>
-            <p className="mt-4 max-w-md text-sm leading-6 text-cream/65">Crie sua conta e configure sua confeitaria em poucos minutos.</p>
+            <p className="mt-4 max-w-md text-sm leading-6 text-cream/65">{invitation ? 'Crie sua conta com o e-mail convidado e volte automaticamente para aceitar o acesso.' : 'Crie sua conta e configure sua confeitaria em poucos minutos.'}</p>
           </div>
           <p className="text-xs text-cream/45">Sem precisar mandar suas receitas por WhatsApp ou atendimento.</p>
         </section>
@@ -50,13 +55,14 @@ export default async function CadastroPage({ searchParams }: { searchParams: Pro
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-wine"><Image src="/confeita-mark.svg" width={32} height={32} alt="Confeita" /></div>
             <p className="m-0 text-2xl font-black text-wine">confeita<span className="text-terracotta">.</span></p>
           </div>
-          <p className="eyebrow mb-2">Começar agora</p>
+          <p className="eyebrow mb-2">{invitation ? 'Aceitar convite' : 'Começar agora'}</p>
           <h2 className="m-0 text-3xl font-black tracking-[-0.04em] text-wine">Crie sua conta</h2>
-          <p className="mt-2 text-sm text-graphite/55">Depois vamos montar o ambiente da sua confeitaria.</p>
+          <p className="mt-2 text-sm text-graphite/55">{invitation ? 'Use exatamente o e-mail que recebeu o convite.' : 'Depois vamos montar o ambiente da sua confeitaria.'}</p>
 
           {error && <div className="mt-5 rounded-2xl bg-danger/10 px-4 py-3 text-sm font-semibold text-danger">{error}</div>}
 
           <form action={signUp} className="mt-8 space-y-4">
+            <input type="hidden" name="next" value={next}/>
             <Field label="Seu nome" icon={<UserRound size={17} className="text-wine/45" />}>
               <input required name="full_name" autoComplete="name" placeholder="Mariana Silva" className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-graphite/30" />
             </Field>
@@ -71,7 +77,7 @@ export default async function CadastroPage({ searchParams }: { searchParams: Pro
             </button>
           </form>
           <p className="mt-4 text-center text-[11px] leading-5 text-graphite/45">Ao continuar, você concorda com os termos e a política de privacidade da Confeita.</p>
-          <p className="mt-5 text-center text-sm text-graphite/55">Já possui conta? <Link href="/login" className="font-bold text-wine">Entrar</Link></p>
+          <p className="mt-5 text-center text-sm text-graphite/55">Já possui conta? <Link href={`/login?next=${encodeURIComponent(next)}`} className="font-bold text-wine">Entrar</Link></p>
         </section>
       </div>
     </main>

@@ -7,7 +7,7 @@ export default async function PainelLayout({ children }: { children: React.React
   const userName = context.user.fullName?.split(' ')[0] || context.user.email?.split('@')[0] || 'Confeiteira';
 
   return (
-    <AppShell businessName={context.business.name} userName={userName} role={context.role}>
+    <AppShell businessName={context.business.name} userName={userName} role={context.role} permissions={context.permissions}>
       {children}
     </AppShell>
   );
