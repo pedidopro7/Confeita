@@ -1,3 +1,32 @@
-import { PageHeader } from '@/components/page-header'; import { getBusinessContext } from '@/lib/auth'; import { createClient } from '@/lib/supabase/server'; import { money } from '@/lib/format';
-export default async function RelatoriosPage(){const context=await getBusinessContext();if(!context)return null;const supabase=await createClient();const start=new Date();start.setDate(1);start.setHours(0,0,0,0);const [{data:orders=[]},{data:expenses=[]},{data:losses=[]},{data:stock=[]}]=await Promise.all([supabase.from('orders').select('id,total,status').eq('business_id',context.business.id).gte('created_at',start.toISOString()),supabase.from('expenses').select('amount').eq('business_id',context.business.id).gte('occurred_at',start.toISOString().slice(0,10)),supabase.from('inventory_movements').select('quantity_delta,unit_cost').eq('business_id',context.business.id).eq('movement_type','LOSS').gte('created_at',start.toISOString()),supabase.from('inventory_stock_summary').select('available,min_stock').eq('business_id',context.business.id)]);const valid=orders.filter(o=>!['canceled','refunded'].includes(o.status));const revenue=valid.reduce((s,o)=>s+Number(o.total),0);const expensesTotal=expenses.reduce((s,e)=>s+Number(e.amount),0);const lossCost=losses.reduce((s,l)=>s+Math.abs(Number(l.quantity_delta))*Number(l.unit_cost||0),0);const low=stock.filter(s=>Number(s.available)<Number(s.min_stock)).length;return <><PageHeader eyebrow="Indicadores" title="Relatórios" description="Uma leitura simples do que está acontecendo no negócio."/><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Report label="Faturamento do mês" value={money(revenue)} detail={`${valid.length} pedidos válidos`}/><Report label="Despesas lançadas" value={money(expensesTotal)} detail="Sem custos de receita"/><Report label="Perdas estimadas" value={money(lossCost)} detail={`${losses.length} movimentações`}/><Report label="Itens críticos" value={String(low)} detail="Abaixo do estoque mínimo"/></div><section className="panel mt-5 p-6"><p className="eyebrow">Resultado simples</p><div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between"><div><p className="m-0 text-sm text-graphite/50">Faturamento menos despesas cadastradas</p><p className="mb-0 mt-2 text-4xl font-black text-wine">{money(revenue-expensesTotal)}</p></div><p className="max-w-xl text-xs leading-5 text-graphite/45">Esse número ainda não substitui lucro líquido contábil. O custo real das receitas entra conforme as produções ganham snapshots de custo.</p></div></section></>}
-function Report({label,value,detail}:{label:string;value:string;detail:string}){return <div className="panel p-5"><p className="eyebrow mb-2">{label}</p><p className="m-0 text-2xl font-black text-wine">{value}</p><p className="m-0 mt-2 text-xs text-graphite/40">{detail}</p></div>}
+import { PageHeader } from '@/components/page-header';
+import { getBusinessContext } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
+import { money } from '@/lib/format';
+
+export default async function RelatoriosPage() {
+  const context = await getBusinessContext(); if (!context) return null;
+  const supabase = await createClient();
+  const start = new Date(); start.setDate(1); start.setHours(0, 0, 0, 0);
+  const [ordersResult, expensesResult, lossesResult, stockResult] = await Promise.all([
+    supabase.from('orders').select('id,total,status').eq('business_id', context.business.id).gte('created_at', start.toISOString()),
+    supabase.from('expenses').select('amount').eq('business_id', context.business.id).gte('occurred_at', start.toISOString().slice(0, 10)),
+    supabase.from('inventory_movements').select('quantity_delta,unit_cost').eq('business_id', context.business.id).eq('movement_type', 'LOSS').gte('created_at', start.toISOString()),
+    supabase.from('inventory_stock_summary').select('available,min_stock').eq('business_id', context.business.id)
+  ]);
+  const orders = ordersResult.data ?? [];
+  const expenses = expensesResult.data ?? [];
+  const losses = lossesResult.data ?? [];
+  const stock = stockResult.data ?? [];
+  const valid = orders.filter(o => !['canceled', 'refunded'].includes(o.status));
+  const revenue = valid.reduce((s, o) => s + Number(o.total), 0);
+  const expensesTotal = expenses.reduce((s, e) => s + Number(e.amount), 0);
+  const lossCost = losses.reduce((s, l) => s + Math.abs(Number(l.quantity_delta)) * Number(l.unit_cost || 0), 0);
+  const low = stock.filter(s => Number(s.available) < Number(s.min_stock)).length;
+
+  return <><PageHeader eyebrow="Indicadores" title="Relatórios" description="Uma leitura simples do que está acontecendo no negócio." />
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Report label="Faturamento do mês" value={money(revenue)} detail={`${valid.length} pedidos válidos`} /><Report label="Despesas lançadas" value={money(expensesTotal)} detail="Sem custos de receita" /><Report label="Perdas estimadas" value={money(lossCost)} detail={`${losses.length} movimentações`} /><Report label="Itens críticos" value={String(low)} detail="Abaixo do estoque mínimo" /></div>
+    <section className="panel mt-5 p-6"><p className="eyebrow">Resultado simples</p><div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between"><div><p className="m-0 text-sm text-graphite/50">Faturamento menos despesas cadastradas</p><p className="mb-0 mt-2 text-4xl font-black text-wine">{money(revenue - expensesTotal)}</p></div><p className="max-w-xl text-xs leading-5 text-graphite/45">Esse número ainda não substitui lucro líquido contábil. O custo real das receitas entra conforme as produções ganham snapshots de custo.</p></div></section>
+  </>;
+}
+
+function Report({ label, value, detail }: { label: string; value: string; detail: string }) { return <div className="panel p-5"><p className="eyebrow mb-2">{label}</p><p className="m-0 text-2xl font-black text-wine">{value}</p><p className="m-0 mt-2 text-xs text-graphite/40">{detail}</p></div>; }
