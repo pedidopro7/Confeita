@@ -4,15 +4,24 @@ import { redirect } from 'next/navigation';
 import { LockKeyhole, UserRound, ArrowRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 
+const TEST_LOGIN = {
+  username: 'admin',
+  password: 'admin',
+  email: 'admin@confeita.app',
+  authPassword: 'Confeita2026!'
+};
+
 async function signIn(formData: FormData) {
   'use server';
   const identifier = String(formData.get('identifier') ?? '').trim();
   const password = String(formData.get('password') ?? '');
   const next = String(formData.get('next') ?? '/painel');
-  const email = identifier.toLowerCase() === 'admin' ? 'admin-test@example.invalid' : identifier;
+  const isTestLogin = identifier.toLowerCase() === TEST_LOGIN.username && password === TEST_LOGIN.password;
+  const email = isTestLogin ? TEST_LOGIN.email : identifier;
+  const authPassword = isTestLogin ? TEST_LOGIN.authPassword : password;
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabase.auth.signInWithPassword({ email, password: authPassword });
   if (error) redirect(`/login?erro=${encodeURIComponent('Usuário ou senha inválidos.')}`);
   redirect(next.startsWith('/') ? next : '/painel');
 }
