@@ -124,7 +124,7 @@ export default async function PedidoDetalhePage({ params, searchParams }: { para
         </section>
 
         {canSeeCosts && <section className="panel p-5"><div className="flex items-center gap-2"><LockKeyhole size={13} className="text-wine"/><p className="eyebrow m-0">Custos do pedido</p></div>{hasCostSnapshot ? <><div className="mt-4 space-y-2 text-sm"><div className="flex justify-between"><span className="text-graphite/50">Insumos congelados</span><strong>{money(materialCostSnapshot)}</strong></div><div className="flex justify-between"><span className="text-graphite/50">Lucro bruto de insumos</span><strong>{money(materialGrossProfit)}</strong></div><div className="flex justify-between"><span className="text-graphite/50">Margem de insumos</span><strong>{numberPt(materialMargin, 1)}%</strong></div></div><p className="mb-0 mt-3 text-[10px] leading-4 text-graphite/40">Snapshot salvo quando a encomenda foi confirmada. Mudanças futuras no custo dos ingredientes não alteram este histórico.</p></> : <p className="mb-0 mt-3 text-xs leading-5 text-graphite/50">O custo será congelado quando a encomenda for confirmada.</p>}</section>}
-        <section className="panel p-5"><p className="eyebrow mb-3">Operação</p><OrderActions id={order.id} status={order.status} /></section>
+        <section className="panel p-5"><p className="eyebrow mb-3">Operação</p><OrderActions id={order.id} status={order.status} fulfillmentType={order.fulfillment_type} /></section>
         {order.notes && <section className="panel p-5"><p className="eyebrow mb-2">Observações</p><p className="m-0 whitespace-pre-wrap text-sm leading-6 text-graphite/60">{order.notes}</p></section>}
       </aside>
     </div>
