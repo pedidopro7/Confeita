@@ -1,12 +1,13 @@
+import { redirect } from 'next/navigation';
 import { PageHeader } from '@/components/page-header';
 import { PurchaseBuilder } from '@/components/purchase-builder';
-import { getBusinessContext } from '@/lib/auth';
+import { getBusinessContext, hasPermission } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createSupplierAction } from '../actions';
 import { money, shortDateTime } from '@/lib/format';
 
 export default async function ComprasPage() {
-  const context = await getBusinessContext(); if (!context) return null;
+  const context = await getBusinessContext(); if (!context) return null; if (!hasPermission(context, 'manage_purchases')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode acessar compras.')); if (!context) return null;
   const supabase = await createClient();
   const [suppliersResult, itemsResult, purchasesResult] = await Promise.all([
     supabase.from('suppliers').select('id,name,whatsapp').eq('business_id', context.business.id).order('name'),
