@@ -11,7 +11,21 @@ async function signIn(formData: FormData) {
   const next = String(formData.get('next') ?? '/painel');
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+  // Em políticas de senha reforçadas, o Supabase pode criar uma sessão válida
+  // e ainda devolver WeakPasswordError. Para o ambiente de teste, sessão válida vence.
+  if (data?.session && data?.user) {
+    redirect(next.startsWith('/') ? next : '/painel');
+  }
+
+  const {
+    data: { user: authenticatedUser }
+  } = await supabase.auth.getUser();
+
+  if (authenticatedUser) {
+    redirect(next.startsWith('/') ? next : '/painel');
+  }
 
   if (error) {
     const code = error.code ?? error.name ?? 'auth_error';
@@ -25,7 +39,7 @@ async function signIn(formData: FormData) {
     redirect(`/login?erro=${encodeURIComponent(message)}&codigo=${encodeURIComponent(code)}`);
   }
 
-  redirect(next.startsWith('/') ? next : '/painel');
+  redirect(`/login?erro=${encodeURIComponent('Não foi possível criar a sessão.')}&codigo=session_missing`);
 }
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -66,7 +80,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <p className="mt-2 text-sm text-graphite/55">Entre para continuar cuidando da sua produção.</p>
           <div className="mt-4 rounded-2xl border border-terracotta/25 bg-terracotta/10 px-4 py-3 text-xs font-bold text-wine">
             Acesso de teste RC1 — <strong>flavia@admin.com</strong> · senha <strong>123456</strong>
-            <div className="mt-1 font-medium text-wine/60">Supabase fixado: sknzdhnjmmgqwfmiedkv</div>
           </div>
 
           {error && (
