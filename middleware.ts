@@ -1,15 +1,11 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from './lib/supabase/config';
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-  if (!url || !key) return response;
-
-  const supabase = createServerClient(url, key, {
+  const supabase = createServerClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     cookies: {
       getAll() {
         return request.cookies.getAll();
@@ -22,7 +18,10 @@ export async function middleware(request: NextRequest) {
     }
   });
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
   const pathname = request.nextUrl.pathname;
   const protectedRoute = pathname.startsWith('/painel') || pathname.startsWith('/onboarding');
   const authRoute = pathname === '/login' || pathname === '/cadastro';
@@ -30,6 +29,7 @@ export async function middleware(request: NextRequest) {
   if (protectedRoute && !user) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/login';
+    redirectUrl.search = '';
     redirectUrl.searchParams.set('next', pathname);
     return NextResponse.redirect(redirectUrl);
   }
