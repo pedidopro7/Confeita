@@ -1,11 +1,13 @@
+import { redirect } from 'next/navigation';
 import { PageHeader } from '@/components/page-header';
 import { OrderBuilder } from '@/components/order-builder';
-import { getBusinessContext } from '@/lib/auth';
+import { getBusinessContext, hasPermission } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 
 export default async function NovoPedidoPage() {
   const context = await getBusinessContext();
   if (!context) return null;
+  if (!hasPermission(context, 'manage_orders')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode criar encomendas.'));
   const supabase = await createClient();
 
   const [customersResult, productsResult, variantsResult, groupsResult, optionsResult, recipesResult] = await Promise.all([
