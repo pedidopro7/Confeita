@@ -1,18 +1,19 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { LockKeyhole, Mail, ArrowRight } from 'lucide-react';
+import { LockKeyhole, UserRound, ArrowRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 
 async function signIn(formData: FormData) {
   'use server';
-  const email = String(formData.get('email') ?? '').trim();
+  const identifier = String(formData.get('identifier') ?? '').trim();
   const password = String(formData.get('password') ?? '');
   const next = String(formData.get('next') ?? '/painel');
+  const email = identifier.toLowerCase() === 'admin' ? 'admin-test@example.invalid' : identifier;
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) redirect(`/login?erro=${encodeURIComponent('E-mail ou senha inválidos.')}`);
+  if (error) redirect(`/login?erro=${encodeURIComponent('Usuário ou senha inválidos.')}`);
   redirect(next.startsWith('/') ? next : '/painel');
 }
 
@@ -58,10 +59,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <form action={signIn} className="mt-8 space-y-4">
             <input type="hidden" name="next" value={next} />
             <label className="block">
-              <span className="mb-2 block text-xs font-bold text-graphite/65">E-mail</span>
+              <span className="mb-2 block text-xs font-bold text-graphite/65">E-mail ou usuário</span>
               <div className="flex items-center gap-3 rounded-2xl border border-wine/10 bg-cream/45 px-4">
-                <Mail size={17} className="text-wine/45" />
-                <input required name="email" type="email" autoComplete="email" placeholder="voce@confeitaria.com" className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-graphite/30" />
+                <UserRound size={17} className="text-wine/45" />
+                <input required name="identifier" type="text" autoComplete="username" placeholder="Seu e-mail ou usuário" className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-graphite/30" />
               </div>
             </label>
             <label className="block">
