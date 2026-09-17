@@ -1,14 +1,15 @@
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ChefHat, PackageCheck, Sparkles } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { OrderActions } from '@/components/order-actions';
 import { ProductionOrderCard } from '@/components/production-order-card';
-import { getBusinessContext } from '@/lib/auth';
+import { getBusinessContext, hasPermission } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { numberPt, shortDateTime } from '@/lib/format';
 
 export default async function ProducaoPage() {
-  const context = await getBusinessContext(); if (!context) return null;
+  const context = await getBusinessContext(); if (!context) return null; if (!hasPermission(context, 'manage_production')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode acessar produção.')); if (!context) return null;
   const supabase = await createClient();
   const [ordersResult, productionResult] = await Promise.all([
     supabase.from('orders').select('id,order_number,status,scheduled_at,fulfillment_type,customer:customers(name),items:order_items(name_snapshot,quantity)').eq('business_id', context.business.id).in('status', ['confirmed', 'production', 'ready']).order('scheduled_at'),
