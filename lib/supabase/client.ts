@@ -1,7 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr';
-
-const SUPABASE_URL = 'https://sknzdhnjmmgqwfmiedkv.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_3ydtCf1je_URlXCYx5HIug_9ZhrxtRT';
+import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from './config';
 
 export function createClient() {
   return createBrowserClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
