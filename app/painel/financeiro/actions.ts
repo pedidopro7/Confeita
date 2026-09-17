@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { getBusinessContext } from '@/lib/auth';
+import { getBusinessContext, hasPermission } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 
 function text(value: FormDataEntryValue | null) { return String(value ?? '').trim(); }
@@ -11,7 +11,7 @@ function num(value: FormDataEntryValue | null) { const parsed = Number(text(valu
 export async function recordManualExpenseAction(formData: FormData) {
   const context = await getBusinessContext();
   if (!context) redirect('/login');
-  if (!['owner','manager','finance'].includes(context.role)) redirect('/painel');
+  if (!hasPermission(context, 'manage_finance')) redirect('/painel');
   const amount = num(formData.get('amount'));
   if (amount <= 0) redirect('/painel/financeiro?erro=' + encodeURIComponent('Informe um valor válido.'));
   const supabase = await createClient();
