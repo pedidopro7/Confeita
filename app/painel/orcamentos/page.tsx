@@ -1,6 +1,7 @@
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { PageHeader } from '@/components/page-header';
-import { getBusinessContext } from '@/lib/auth';
+import { getBusinessContext, hasPermission } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { money, shortDateTime } from '@/lib/format';
 import { QuoteActions } from '@/components/quote-actions';
@@ -8,7 +9,7 @@ import { QuoteActions } from '@/components/quote-actions';
 const labels:Record<string,string>={draft:'Rascunho',sent:'Enviado',waiting:'Aguardando',approved:'Aprovado',rejected:'Recusado',expired:'Expirado'};
 
 export default async function OrcamentosPage() {
-  const context = await getBusinessContext(); if (!context) return null;
+  const context = await getBusinessContext(); if (!context) return null; if (!hasPermission(context, 'manage_quotes')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode acessar orçamentos.')); if (!context) return null;
   const supabase = await createClient();
   const { data } = await supabase.from('quotes').select('id,status,desired_at,total,deposit_required,fulfillment_type,created_at,customer:customers(name)').eq('business_id', context.business.id).order('created_at', { ascending: false }).limit(100);
   const quotes = data ?? [];
