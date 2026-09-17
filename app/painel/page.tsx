@@ -98,8 +98,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <p className="eyebrow mb-1">Primeiros passos</p>
           <h2 className="m-0 text-xl font-black tracking-[-.03em] text-wine">Faça a Confeita trabalhar por você</h2>
           <div className="mt-5 grid gap-3 md:grid-cols-3">
-            <SetupStep done={stockCount > 0} number="1" title="Ingredientes e estoque" text="Cadastre o que você compra e quanto possui." href="/painel/estoque/novo" />
-            <SetupStep done={productCount > 0} number="2" title="Produtos" text="Cadastre bolos, doces, kits e variações." href="/painel/produtos/novo" />
+            <SetupStep done={stockCount > 0} number="1" title="Ingredientes e estoque" text="Cadastre o que você compra e quanto possui." href="/painel/estoque" />
+            <SetupStep done={productCount > 0} number="2" title="Produtos" text="Cadastre bolos, doces, kits e variações." href="/painel/produtos" />
             <SetupStep done={recipes.length > 0} number="3" title="Cofre de Receitas" text="Vincule ingredientes e rendimentos em sigilo." href="/painel/cofre/nova" />
           </div>
         </section>
@@ -108,7 +108,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       <section className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <QuickAction href="/painel/pedidos/novo" icon={CalendarDays} title="Nova encomenda" text="Pedido, data e cliente" />
         <QuickAction href="/painel/producao" icon={Sparkles} title="Começar produção" text="Veja o que precisa ser feito" />
-        <QuickAction href="/painel/compras/nova" icon={ShoppingBasket} title="Registrar compra" text="Atualize seu estoque" />
+        <QuickAction href="/painel/compras" icon={ShoppingBasket} title="Registrar compra" text="Atualize seu estoque" />
         <QuickAction href="/painel/cofre" icon={LockKeyhole} title="Abrir Cofre" text="Fórmulas protegidas" />
       </section>
 

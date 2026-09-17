@@ -1,7 +1,8 @@
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Clock3, MessageCircle, PackageCheck, ShoppingBasket, TriangleAlert } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
-import { getBusinessContext } from '@/lib/auth';
+import { getBusinessContext, hasPermission } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { money, numberPt, shortDateTime } from '@/lib/format';
 
@@ -34,7 +35,7 @@ const horizons = [
 ];
 
 export default async function ListaComprasPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const context = await getBusinessContext(); if (!context) return null;
+  const context = await getBusinessContext(); if (!context) return null; if (!hasPermission(context, 'manage_purchases')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode acessar compras.')); if (!context) return null;
   const params = await searchParams;
   const requestedDays = typeof params.dias === 'string' ? Number(params.dias) : 7;
   const days = horizons.some((option) => option.days === requestedDays) ? requestedDays : 7;

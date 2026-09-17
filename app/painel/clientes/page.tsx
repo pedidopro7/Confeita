@@ -1,13 +1,14 @@
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight, UsersRound } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
-import { getBusinessContext } from '@/lib/auth';
+import { getBusinessContext, hasPermission } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { createCustomerAction } from '../actions';
 import { money, shortDate } from '@/lib/format';
 
 export default async function ClientesPage() {
-  const context = await getBusinessContext();
+  const context = await getBusinessContext(); if (!context) return null; if (!hasPermission(context, 'view_customers')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode acessar clientes.'));
   if (!context) return null;
   const supabase = await createClient();
   const [customersResult, metricsResult] = await Promise.all([

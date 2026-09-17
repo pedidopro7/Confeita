@@ -23,7 +23,7 @@ export type BusinessContext = {
 
 const rolePermissions: Record<string, string[]> = {
   owner: ['*'],
-  manager: ['view_costs','view_revenue','adjust_stock','cancel_orders','apply_discount','view_customers','manage_products','manage_orders','manage_production','manage_purchases'],
+  manager: ['view_costs','view_revenue','adjust_stock','cancel_orders','apply_discount','view_customers','manage_products','manage_orders','manage_quotes','manage_production','manage_purchases','manage_finance'],
   service: ['view_customers','manage_orders','manage_quotes'],
   production: ['manage_production'],
   stock: ['adjust_stock','manage_purchases'],

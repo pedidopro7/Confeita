@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { LockKeyhole, Plus, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
-import { getBusinessContext } from '@/lib/auth';
+import { getBusinessContext, hasPermission } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { money, numberPt } from '@/lib/format';
 import {
@@ -57,6 +57,7 @@ export default async function ProdutoDetalhePage({ params }: { params: Promise<{
   const { id } = await params;
   const context = await getBusinessContext();
   if (!context) return null;
+  if (!hasPermission(context, 'manage_products')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode editar produtos.'));
   const supabase = await createClient();
 
   const [{ data: product }, { data: variantRows }, { data: groupRows }, { data: recipeRows }] = await Promise.all([

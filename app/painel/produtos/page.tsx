@@ -1,13 +1,14 @@
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { LockKeyhole, SlidersHorizontal } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
-import { getBusinessContext } from '@/lib/auth';
+import { getBusinessContext, hasPermission } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { money } from '@/lib/format';
 import { createProductCatalogAction } from './actions';
 
 export default async function ProdutosPage() {
-  const context = await getBusinessContext();
+  const context = await getBusinessContext(); if (!context) return null; if (!hasPermission(context, 'manage_products')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode acessar produtos.'));
   if (!context) return null;
   const supabase = await createClient();
   const [{ data: productRows }, { data: recipeRows }, { data: variantRows }, { data: groupRows }] = await Promise.all([
