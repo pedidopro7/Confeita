@@ -12,13 +12,26 @@ async function signIn(formData: FormData) {
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) redirect(`/login?erro=${encodeURIComponent('E-mail ou senha inválidos.')}`);
+
+  if (error) {
+    const code = error.code ?? error.name ?? 'auth_error';
+    const message = error.message ?? 'Falha de autenticação';
+    console.error('[Confeita Auth]', {
+      code,
+      name: error.name,
+      status: error.status,
+      message
+    });
+    redirect(`/login?erro=${encodeURIComponent(message)}&codigo=${encodeURIComponent(code)}`);
+  }
+
   redirect(next.startsWith('/') ? next : '/painel');
 }
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams;
   const error = typeof params.erro === 'string' ? params.erro : null;
+  const errorCode = typeof params.codigo === 'string' ? params.codigo : null;
   const next = typeof params.next === 'string' ? params.next : '/painel';
   const created = params.cadastro === 'ok';
 
@@ -53,9 +66,15 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <p className="mt-2 text-sm text-graphite/55">Entre para continuar cuidando da sua produção.</p>
           <div className="mt-4 rounded-2xl border border-terracotta/25 bg-terracotta/10 px-4 py-3 text-xs font-bold text-wine">
             Acesso de teste RC1 — <strong>flavia@admin.com</strong> · senha <strong>123456</strong>
+            <div className="mt-1 font-medium text-wine/60">Supabase fixado: sknzdhnjmmgqwfmiedkv</div>
           </div>
 
-          {error && <div className="mt-5 rounded-2xl bg-danger/10 px-4 py-3 text-sm font-semibold text-danger">{error}</div>}
+          {error && (
+            <div className="mt-5 rounded-2xl bg-danger/10 px-4 py-3 text-sm font-semibold text-danger">
+              <div>{error}</div>
+              {errorCode && <div className="mt-1 text-xs font-medium opacity-70">Código técnico: {errorCode}</div>}
+            </div>
+          )}
           {created && <div className="mt-5 rounded-2xl bg-success/10 px-4 py-3 text-sm font-semibold text-success">Conta criada. Confirme seu e-mail se o Supabase solicitar e depois entre.</div>}
 
           <form action={signIn} className="mt-8 space-y-4">
