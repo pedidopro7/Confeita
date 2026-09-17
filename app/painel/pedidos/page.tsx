@@ -1,0 +1,16 @@
+import Link from 'next/link';
+import { PageHeader } from '@/components/page-header';
+import { StatusBadge } from '@/components/status-badge';
+import { getBusinessContext } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
+import { money, shortDateTime } from '@/lib/format';
+
+export default async function PedidosPage() {
+  const context = await getBusinessContext(); if (!context) return null;
+  const supabase = await createClient();
+  const { data } = await supabase.from('orders').select('id,order_number,status,scheduled_at,total,fulfillment_type,customer:customers(name)').eq('business_id', context.business.id).order('created_at', { ascending: false }).limit(100);
+  const orders = data ?? [];
+  return <><PageHeader eyebrow="Encomendas" title="Pedidos" description="Do orçamento à entrega, acompanhe cada encomenda e a reserva automática de ingredientes." actionHref="/painel/pedidos/novo" actionLabel="Nova encomenda" />
+    <section className="panel overflow-hidden">{orders.length === 0 ? <div className="p-10 text-center text-sm text-graphite/45">Você ainda não possui encomendas.</div> : orders.map((o: any) => <Link key={o.id} href={`/painel/pedidos/${o.id}`} className="grid gap-3 border-b border-wine/5 px-5 py-4 last:border-0 hover:bg-wine/[.02] sm:grid-cols-[90px_1fr_150px_120px] sm:items-center"><strong className="text-sm text-wine">#{o.order_number}</strong><div><p className="m-0 text-sm font-bold text-graphite">{Array.isArray(o.customer) ? o.customer[0]?.name : o.customer?.name || 'Cliente não informado'}</p><p className="m-0 mt-1 text-xs text-graphite/40">{shortDateTime(o.scheduled_at)} · {o.fulfillment_type === 'delivery' ? 'Entrega' : 'Retirada'}</p></div><StatusBadge status={o.status} /><strong className="text-sm text-wine sm:text-right">{money(o.total)}</strong></Link>)}</section>
+  </>;
+}

@@ -1,109 +1,39 @@
 # Confeita
 
-SaaS de gestão para confeiteiros, doceiros, boleiros e ateliês de confeitaria.
+SaaS completo de gestão para confeiteiros, doceiros, boleiros e ateliês de confeitaria.
 
-## Proposta
+## Visão
 
-A Confeita conecta o fluxo inteiro da operação:
+A Confeita conecta pedidos, produtos, receitas confidenciais, ingredientes, estoque, produção, custos e financeiro em um único ambiente multitenant.
 
-**Pedido → Produto → Receita secreta → Ingredientes → Estoque → Produção → Custo → Lucro**
+### Núcleo do produto
 
-O produto foi desenhado para parecer simples na superfície e manter uma estrutura de gestão robusta por baixo.
-
-## Pilares
-
-- Encomendas e agenda
-- Produção
-- Estoque inteligente
-- Custos e precificação
-- Financeiro
-- Clientes e CRM
-- Compras e fornecedores
-- Equipe e permissões
-- **Cofre de Receitas** com acesso restrito e histórico
-- Modelo SaaS multitenant com cobrança recorrente
+Pedido → Produto → Cofre de Receitas → Ingredientes → Estoque → Produção → Custo → Lucro.
 
 ## Stack
 
-- Next.js App Router
-- TypeScript
+- Next.js App Router + TypeScript
 - Tailwind CSS
-- Supabase Auth / PostgreSQL / RLS / Storage / Realtime
-- PWA
+- Supabase (PostgreSQL, Auth, RLS, Storage)
 - Vercel
+- PWA em evolução
 
-## Identidade
+## Segurança
 
-Cores principais:
+O Cofre de Receitas usa isolamento por `business_id`, RLS e permissões específicas. Fórmulas completas não fazem parte do backoffice operacional comum do SaaS.
 
-- Vinho `#4B1F36`
-- Terracota `#C97663`
-- Rosa antigo `#D8A7A0`
-- Creme `#F9F3EB`
-- Grafite `#3F3F3F`
+## Desenvolvimento
 
-A marca usa um **C circular inspirado de forma sutil em uma rosquinha**, com uma fechadura no espaço interno representando o Cofre de Receitas.
-
-## Supabase
-
-Projeto vinculado: `Confeita`
-
-Ref: `sknzdhnjmmgqwfmiedkv`
-
-Região: `sa-east-1`
-
-A primeira migração estrutural já foi aplicada no projeto com:
-
-- multitenancy por `business_id`;
-- negócios e membros;
-- planos e assinaturas;
-- clientes;
-- produtos e variações;
-- inventário, lotes, reservas e movimentações;
-- receitas, versões, componentes, permissões e logs;
-- pedidos, itens e pagamentos;
-- produção;
-- compras e fornecedores;
-- despesas e transações financeiras;
-- auditoria;
-- RLS habilitado nas tabelas de negócio.
-
-## Variáveis de ambiente
-
-Copie `.env.example` para `.env.local`:
+Variáveis obrigatórias:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 ```
 
-Nunca versione segredos de backend.
-
-## Desenvolvimento
+Execute:
 
 ```bash
 npm install
 npm run dev
 ```
-
-## Regra de UX
-
-A interface não deve usar linguagem de ERP quando existir uma alternativa natural para confeitaria.
-
-Exemplos:
-
-- `Gerar OP` → **Começar produção**
-- `Saída de matéria-prima` → **Produzi**
-- `Movimentação de inventário` → **Corrigir estoque**
-
-## Cofre de Receitas
-
-A receita é tratada como patrimônio do negócio. O cadastro precisa transmitir confidencialidade e, tecnicamente, limitar o acesso ao menor número possível de pessoas.
-
-O modo de preparo é opcional. Para o motor de estoque, o mínimo necessário é:
-
-- ingredientes;
-- quantidades;
-- rendimento.
-
-As próximas etapas devem reforçar RLS específico do Cofre, permissões granulares, auditoria de acesso, bloqueio automático e fluxos de produção protegida.
