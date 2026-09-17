@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { ComponentType } from 'react';
 import { AlertTriangle, Bell, CalendarClock, CircleDollarSign, PackageOpen, TimerReset } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { getBusinessContext } from '@/lib/auth';
@@ -6,7 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { money, numberPt, shortDateTime } from '@/lib/format';
 import { markAllNotificationsReadAction, markNotificationReadAction } from './actions';
 
-type LiveAlert={key:string;title:string;body:string;href:string;tone:'danger'|'warning'|'info';icon:React.ComponentType<{size?:number;className?:string}>};
+type LiveAlert={key:string;title:string;body:string;href:string;tone:'danger'|'warning'|'info';icon:ComponentType<{size?:number;className?:string}>};
 
 export default async function NotificacoesPage(){
   const context=await getBusinessContext(); if(!context) return null;
