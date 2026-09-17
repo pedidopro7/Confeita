@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { getBusinessContext } from '@/lib/auth';
+import { getBusinessContext, hasPermission } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 
 function text(value: FormDataEntryValue | null) {
@@ -25,6 +25,7 @@ function message(error: string) {
 export async function recordOrderPaymentAction(orderId: string, formData: FormData) {
   const context = await getBusinessContext();
   if (!context) redirect('/login');
+  if (!(hasPermission(context, 'manage_finance') || hasPermission(context, 'manage_orders'))) redirect('/painel');
   const amount = num(formData.get('amount'));
   const method = text(formData.get('method'));
   const key = text(formData.get('idempotency_key'));
@@ -50,6 +51,7 @@ export async function recordOrderPaymentAction(orderId: string, formData: FormDa
 export async function refundOrderPaymentAction(orderId: string, paymentId: string, _formData: FormData) {
   const context = await getBusinessContext();
   if (!context) redirect('/login');
+  if (!hasPermission(context, 'manage_finance')) redirect('/painel');
   const supabase = await createClient();
   const { error } = await supabase.rpc('refund_order_payment', { p_payment_id: paymentId });
   if (error) redirect(`/painel/pedidos/${orderId}?erro_pagamento=${encodeURIComponent(message(error.message))}`);
