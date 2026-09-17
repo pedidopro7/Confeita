@@ -1,10 +1,11 @@
+import { redirect } from 'next/navigation';
 import { PageHeader } from '@/components/page-header';
-import { getBusinessContext } from '@/lib/auth';
+import { getBusinessContext, hasPermission } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { money, numberPt } from '@/lib/format';
 
 export default async function RelatoriosPage() {
-  const context = await getBusinessContext(); if (!context) return null;
+  const context = await getBusinessContext(); if (!context) return null; if (!hasPermission(context, 'view_revenue')) redirect('/painel?erro=' + encodeURIComponent('Seu perfil não pode acessar relatórios.')); if (!context) return null;
   const supabase = await createClient();
   const start = new Date(); start.setDate(1); start.setHours(0, 0, 0, 0);
   const [ordersResult, expensesResult, lossesResult, stockResult, itemCostsResult] = await Promise.all([
