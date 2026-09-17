@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { requireOwner } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 
@@ -64,7 +65,7 @@ export async function createRecipeVersionAction(input: RecipeVersionInput) {
   return { ok: true, versionId: String(data), businessId: context.business.id } as const;
 }
 
-export async function restoreRecipeVersionAction(recipeId: string, versionId: string) {
+export async function restoreRecipeVersionAction(recipeId: string, versionId: string, _formData: FormData): Promise<void> {
   await requireOwner();
   const supabase = await createClient();
 
@@ -73,7 +74,7 @@ export async function restoreRecipeVersionAction(recipeId: string, versionId: st
     supabase.from('recipe_components').select('component_type,inventory_item_id,sub_recipe_id,quantity,unit,is_visible_in_production,sort_order').eq('recipe_version_id', versionId).order('sort_order')
   ]);
 
-  if (versionError || componentsError || !version) return { ok: false, error: 'Versão histórica não encontrada.' } as const;
+  if (versionError || componentsError || !version) redirect(`/painel/cofre/${recipeId}?erro=${encodeURIComponent('Versão histórica não encontrada.')}`);
 
   const { error } = await supabase.rpc('create_recipe_version', {
     p_recipe_id: recipeId,
@@ -90,11 +91,11 @@ export async function restoreRecipeVersionAction(recipeId: string, versionId: st
     }))
   });
 
-  if (error) return { ok: false, error: friendlyError(error.message) } as const;
+  if (error) redirect(`/painel/cofre/${recipeId}?erro=${encodeURIComponent(friendlyError(error.message))}`);
   revalidatePath(`/painel/cofre/${recipeId}`);
   revalidatePath('/painel/cofre');
   revalidatePath('/painel/precificacao');
-  return { ok: true } as const;
+  redirect(`/painel/cofre/${recipeId}?ok=restaurada`);
 }
 
 export async function updateRecipePrivacyAction(formData: FormData) {
