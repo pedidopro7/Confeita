@@ -89,3 +89,4 @@ create index if not exists idx_financial_transactions_business_paid on public.fi
 drop index if exists public.idx_inventory_movements_item;
 drop index if exists public.idx_orders_business_scheduled;
 drop index if exists public.idx_production_orders_business_status;
+drop index if exists public.idx_order_items_order_id;
