@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { getBusinessContext } from '@/lib/auth';
+import { getBusinessContext, hasPermission } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 
 function text(value: FormDataEntryValue | null) {
@@ -12,7 +12,7 @@ function text(value: FormDataEntryValue | null) {
 export async function updateCustomerProfileAction(customerId: string, formData: FormData) {
   const context = await getBusinessContext();
   if (!context) redirect('/login');
-  if (!['owner', 'manager', 'service'].includes(context.role)) redirect(`/painel/clientes/${customerId}?erro=${encodeURIComponent('Seu perfil não pode editar clientes.')}`);
+  if (!hasPermission(context, 'view_customers')) redirect(`/painel/clientes/${customerId}?erro=${encodeURIComponent('Seu perfil não pode editar clientes.')}`);
 
   const tags = text(formData.get('tags')).split(',').map((tag) => tag.trim()).filter(Boolean).slice(0, 20);
   const address = {
