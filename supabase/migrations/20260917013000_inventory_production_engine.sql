@@ -21,9 +21,8 @@ with recursive recipe_tree as (
       when p_output_qty is null then 1::numeric
       else p_output_qty / nullif(rv.yield_qty, 0)
     end as factor,
-    array[r.recipe_id]::uuid[] as visited_recipes
+    array[rv.recipe_id]::uuid[] as visited_recipes
   from public.recipe_versions rv
-  join public.recipes r on r.id = rv.recipe_id
   where rv.id = p_recipe_version_id
 
   union all
