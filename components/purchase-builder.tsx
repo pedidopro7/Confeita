@@ -27,13 +27,13 @@ function newKey() {
   return globalThis.crypto.randomUUID();
 }
 
-export function PurchaseBuilder({ items, suppliers }: { items: InventoryItem[]; suppliers: Supplier[] }) {
+export function PurchaseBuilder({ items, suppliers, initialItemId = '', initialQuantity = 1, initialUnit = '', initialSupplierId = '' }: { items: InventoryItem[]; suppliers: Supplier[]; initialItemId?: string; initialQuantity?: number; initialUnit?: string; initialSupplierId?: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [supplierId, setSupplierId] = useState('');
+  const [supplierId, setSupplierId] = useState(initialSupplierId);
   const [paymentMethod, setPaymentMethod] = useState('pix');
   const [notes, setNotes] = useState('');
-  const [rows, setRows] = useState<Row[]>([]);
+  const [rows, setRows] = useState<Row[]>(() => { const item = items.find((candidate) => candidate.id === initialItemId); return item ? [{ key: newKey(), inventoryItemId: item.id, quantity: Math.max(Number(initialQuantity) || 1, 0.0001), unit: initialUnit || item.purchase_unit || item.base_unit, totalCost: 0, lotCode: '', expiresAt: '' }] : []; });
   const [picker, setPicker] = useState('');
   const [idempotencyKey, setIdempotencyKey] = useState(newKey);
   const [message, setMessage] = useState<{ type: 'ok' | 'error'; text: string } | null>(null);
