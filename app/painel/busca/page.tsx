@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { ClipboardList, Cookie, LockKeyhole, PackageOpen, Search, UsersRound } from 'lucide-react';
 import { PageHeader } from '@/components/page-header';
 import { getBusinessContext } from '@/lib/auth';
@@ -25,7 +26,7 @@ export default async function BuscaPage({searchParams}:{searchParams:Promise<Rec
     numeric!==null?supabase.from('orders').select('id,order_number,total,status,scheduled_at,customer:customers(name)').eq('business_id',context.business.id).eq('order_number',numeric).limit(8):Promise.resolve(empty)
   ]):[empty,empty,empty,empty,empty];
 
-  const groups=[
+  const groups:Array<{label:string;icon:any;rows:any[];render:(row:any)=>ReactNode}>=[
     {label:'Clientes',icon:UsersRound,rows:customersResult.data??[],render:(row:any)=><Result key={row.id} href={`/painel/clientes/${row.id}`} title={row.name} detail={row.whatsapp||row.email||'Sem contato'}/>},
     {label:'Pedidos',icon:ClipboardList,rows:ordersResult.data??[],render:(row:any)=>{const customer=Array.isArray(row.customer)?row.customer[0]:row.customer;return <Result key={row.id} href={`/painel/pedidos/${row.id}`} title={`Pedido #${row.order_number} · ${customer?.name||'Sem cliente'}`} detail={`${shortDateTime(row.scheduled_at)} · ${money(row.total)}`}/>}},
     {label:'Produtos',icon:Cookie,rows:productsResult.data??[],render:(row:any)=><Result key={row.id} href={`/painel/produtos/${row.id}`} title={row.name} detail={`${row.product_type} · ${money(row.base_price)}`}/>},
